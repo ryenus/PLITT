@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        Google Sharp
 // @namespace   ryenus.toys
-// @description Prefix google search results with `#n` for direct links
+// @description Number google search results
 // @copyright   2014+ (https://github.com/ryenus)
-// @license     The MIT License (https://opensource.org/licenses/MIT)
-// @version     1.3.1
+// @license     MIT
+// @version     2.3
 
 // @homepageURL https://github.com/ryenus/g_sharp
 // @homepageURL https://openuserjs.org/scripts/ryenus/Google_Sharp
@@ -21,19 +21,23 @@
 // @grant       none
 // ==/UserScript==
 
-(function(d, t) {
-  if (!(d.forms[0] && d.forms[0].action.match(/search/))) return;
-  d.addEventListener('DOMSubtreeModified', function() {
-    if (t === 0) t = setTimeout(function() {
-      Array.from(d.getElementsByClassName('r'), function(r, i) {
-        var a = r.getElementsByTagName('a');
-        if (a.length == 1) {
-          r.insertAdjacentHTML("afterbegin", "<a href='" + a[0].href +
-            "' target='_blank' rel='noopener noreferrer' class='g_sharp _ogd'>[#" +
-            i + "]</a>");
-        }
+/* jshint esversion: 6 */
+(function (d) {
+  var done = false, fn = function () {
+    var arr = d.querySelectorAll('.g a[data-ved]:not([role]):not([gnum])');
+    if (arr.length > 0) {
+      Array.from(arr, function (a, i) {
+        a.setAttribute('gnum', '');
+        var elem = (a.querySelector('h3') || a), tag = elem.tagName.match(/h3/i) ? 'h3' : 'span';
+        elem.insertAdjacentHTML("beforebegin", `<a href='${a.href}'` +
+          `target='_blank' rel='noopener noreferrer' style='display:inline' gnum>` +
+          `<${tag} style='display:inline'>[#${i}]</${tag}></a>&nbsp;`);
       });
-      t = 0;
-    }, 500);
-  }, false);
-})(document, 0);
+      done = true;
+    }
+  };
+
+  var timer = setInterval(function () {
+    done ? clearInterval(timer) : fn();
+  }, 300);
+})(document);
